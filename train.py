@@ -219,7 +219,7 @@ if __name__ == "__main__":
         print(f"Round {i+1} of training")
         epoch_loss1, epoch_loss2 = [], []
 
-        if (i + 1) % 50 == 0:
+        if (i + 1) % 5000 == 0:
 
             model1.eval()
             model2.eval()
@@ -243,7 +243,7 @@ if __name__ == "__main__":
                 cls_Generate_label = torch.stack([x[2] for x in cls_generate])
                 cls_GenDataLoder = DataLoader(
                     TensorDataset(cls_Generate_data, cls_Generate_SC, cls_Generate_label),
-                    batch_size=BATCH_SIZE, shuffle=True, drop_last=True
+                    batch_size= int((len(cls_Generate_data)+1)/14) , shuffle=True, drop_last=True
                 )
 
             if len(reg_generate) > 0:
@@ -252,7 +252,7 @@ if __name__ == "__main__":
                 reg_Generate_label = torch.stack([x[2] for x in reg_generate])
                 reg_GenDataLoder = DataLoader(
                     TensorDataset(reg_Generate_data, reg_Generate_SC, reg_Generate_label),
-                    batch_size=BATCH_SIZE, shuffle=True, drop_last=True
+                    batch_size=int((len(reg_Generate_data)+1)/14), shuffle=True, drop_last=True
                 )
 
 
@@ -296,10 +296,10 @@ if __name__ == "__main__":
 
 
             out2_2 = model2(data_reg, SC_reg)
-            out1_2 = model1(data_reg, SC_reg)
+            #out1_2 = model1(data_reg, SC_reg)
 
             loss_reg = se(out2_2.squeeze(1), reg_label1)
-            loss_diff = criterion(calculate_P(reg_label1.detach().reshape(-1, 1)), out1_2)
+            #loss_diff = criterion(calculate_P(reg_label1.detach().reshape(-1, 1)), out1_2)
 
 
             optim2.zero_grad()
@@ -340,7 +340,7 @@ if __name__ == "__main__":
                     iter_gen_reg = iter(reg_GenDataLoder) if reg_GenDataLoder != [] else None
 
 
-            final_cls_loss = loss1 + loss_diff + accumulated_cls_loss
+            final_cls_loss = loss1 #+ loss_diff + accumulated_cls_loss
             final_cls_loss.backward()
             optim1.step()
             optim1.zero_grad()
@@ -363,7 +363,7 @@ if __name__ == "__main__":
             out2_U = model2(un_data, un_SC)
 
 
-            if (i + 1) % 100 == 0:
+            if (i + 1) % 10000 == 0:
                 pred1 = torch.argmax(out1_U, dim=1)
                 pred2 = torch.argmax(calculate_P(out2_U), dim=1)
                 class_diff = torch.abs(pred1 - pred2)
@@ -422,7 +422,9 @@ if __name__ == "__main__":
 
 
             acc2.append(acc_cls)
-
+            if i >100:
+                torch.save(model1.state_dict(),f'STP-model1-{acc_cls}.pth')
+                torch.save(model2.state_dict(), f'STP-model2-{acc_cls}.pth')
             print(
                 f"Epoch {i + 1} | cls:{acc_cls:.2%}  | Max cls:{max(acc2):.2%} | 当前数据集大小:{len(merged_dataset)}")
             cls_acc.append(acc_cls)
