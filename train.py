@@ -419,17 +419,13 @@ if __name__ == "__main__":
             out2_for_acc = out2.squeeze() if out2.dim() > 1 else out2
 
             acc_cls = (out1_pred == cls_label).float().mean().item()
-
-
             acc2.append(acc_cls)
-            if i >100:
-                torch.save(model1.state_dict(),f'STP-model1-{acc_cls}.pth')
-                torch.save(model2.state_dict(), f'STP-model2-{acc_cls}.pth')
             print(
                 f"Epoch {i + 1} | cls:{acc_cls:.2%}  | Max cls:{max(acc2):.2%} | 当前数据集大小:{len(merged_dataset)}")
             cls_acc.append(acc_cls)
         model1.train()
         model2.train()
 
-
-    np.save('acc.npy', np.array(cls_acc))
+    torch.save(model1.state_dict(), f'STP-model1-{acc_cls}.pth')
+    torch.save(model2.state_dict(), f'STP-model2-{acc_cls}.pth')
+   
